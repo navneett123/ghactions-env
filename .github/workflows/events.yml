@@ -38,6 +38,7 @@ jobs:
         run: |
           echo "Connecting to MongoDB with DB_USER=$DB_USER"
           echo "DB_URI=mongodb+srv://${DB_USER}:${DB_PASS}@${DB_CLUSTER}/${DB_NAME}?retryWrites=true&w=majority"
+          echo "DB_USER:${DB_USER} , DB_CLUSTER:${DB_CLUSTER}, DB_NAME=${DB_NAME}"
           node app.js &  # Simulate backend start (use PM2/Docker for real deploy)
 
       # ----------------- FRONTEND -----------------
