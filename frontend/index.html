@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mongo Auth App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .form-wrapper {
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      padding: 32px;
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-wrapper h2 {
+      text-align: center;
+      font-size: 24px;
+      color: #333;
+      margin: 0;
+    }
+
+    form {
+      display: grid;
+      gap: 15px;
+    }
+
+    input {
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    button {
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .toggle {
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .toggle span {
+      color: #007bff;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    #message {
+      text-align: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    @media (max-width: 480px) {
+      .form-wrapper {
+        margin: 0 16px;
+        padding: 24px;
+      }
+
+      .form-wrapper h2 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-wrapper">
+    <h2 id="formTitle">Login</h2>
+    <form id="authForm">
+      <input type="text" id="username" placeholder="Username" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit" id="submitBtn">Login</button>
+    </form>
+    <div class="toggle">
+      <span id="toggleMode">Don't have an account? Signup</span>
+    </div>
+    <div id="message"></div>
+  </div>
+
+  <script>
+    let isLogin = true;
+    const formTitle = document.getElementById("formTitle");
+    const toggleMode = document.getElementById("toggleMode");
+    const submitBtn = document.getElementById("submitBtn");
+    const message = document.getElementById("message");
+
+    toggleMode.onclick = () => {
+      isLogin = !isLogin;
+      formTitle.innerText = isLogin ? "Login" : "Signup";
+      submitBtn.innerText = isLogin ? "Login" : "Signup";
+      toggleMode.innerText = isLogin ? "Don't have an account? Signup" : "Already have an account? Login";
+      message.innerText = "";
+    };
+
+    document.getElementById("authForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const endpoint = isLogin ? "login" : "signup";
+      const payload = {
+        username: document.getElementById("username").value.trim(),
+        password: document.getElementById("password").value.trim()
+      };
+
+      if (!payload.username || !payload.password) {
+        message.innerText = "Please fill in all fields.";
+        message.style.color = "red";
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        message.innerText = result.message || "Something happened.";
+        message.style.color = response.ok ? "green" : "red";
+      } catch (error) {
+        message.innerText = "Server not reachable.";
+        message.style.color = "red";
+      }
+    };
+  </script>
+</body>
+</html>
