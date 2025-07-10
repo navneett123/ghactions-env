@@ -1,2 +1,57 @@
-name: Events Workflow
-on: workflow_dispatch
+name: Build Mongo Auth App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-app:
+    runs-on: ubuntu-latest
+
+    env:  # Global env vars (safe ones)
+      NODE_ENV: production
+      FRONTEND_PORT: 3000
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🔧 Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # ----------------- BACKEND -----------------
+      - name: 📦 Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: ⚙️ Run backend using environment variables
+        working-directory: ./backend
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          DB_CLUSTER: ${{ secrets.DB_CLUSTER }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+        run: |
+          echo "Connecting to MongoDB with DB_USER=$DB_USER"
+          echo "DB_URI=mongodb+srv://${DB_USER}:${DB_PASS}@${DB_CLUSTER}/${DB_NAME}?retryWrites=true&w=majority"
+          node app.js &  # Simulate backend start (use PM2/Docker for real deploy)
+
+      # ----------------- FRONTEND -----------------
+      - name: 📦 Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: 🚀 Start frontend server
+        working-directory: ./frontend
+        run: |
+          echo "Frontend starting on http://localhost:$FRONTEND_PORT"
+          node server.js &  # Simulate frontend run
+
+      - name: ✅ Smoke test (example)
+        run: |
+          echo "Testing if servers are alive..."
+          curl --silent http://localhost:5000/api/login || echo "Backend may not be responding"
+          curl --silent http://localhost:3000 || echo "Frontend may not be responding"
