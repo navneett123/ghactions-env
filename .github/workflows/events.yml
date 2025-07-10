@@ -7,11 +7,16 @@ on:
 
 jobs:
   build-app:
+    environment: test
+    env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          DB_CLUSTER: ${{ secrets.DB_CLUSTER }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+
     runs-on: ubuntu-latest
 
-    env:  # Global env vars (safe ones)
-      NODE_ENV: production
-      FRONTEND_PORT: 3000
+
 
     steps:
       - name: 📥 Checkout code
@@ -29,11 +34,7 @@ jobs:
 
       - name: ⚙️ Run backend using environment variables
         working-directory: ./backend
-        env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASS: ${{ secrets.DB_PASS }}
-          DB_CLUSTER: ${{ secrets.DB_CLUSTER }}
-          DB_NAME: ${{ secrets.DB_NAME }}
+        
         run: |
           echo "Connecting to MongoDB with DB_USER=$DB_USER"
           echo "DB_URI=mongodb+srv://${DB_USER}:${DB_PASS}@${DB_CLUSTER}/${DB_NAME}?retryWrites=true&w=majority"
@@ -46,8 +47,10 @@ jobs:
 
       - name: 🚀 Start frontend server
         working-directory: ./frontend
+        env:
+            FRONTEND_PORT: 3000
         run: |
-          echo "Frontend starting on http://localhost:$FRONTEND_PORT"
+          echo "Frontend starting on http://localhost:${{env.FRONTEND_PORT}}"
           node server.js &  # Simulate frontend run
 
       - name: ✅ Smoke test (example)
